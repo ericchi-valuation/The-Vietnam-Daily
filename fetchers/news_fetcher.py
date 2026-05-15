@@ -87,64 +87,49 @@ def fetch_rss_news(feed_url, limit=3, max_retries=3, max_hours=36):
 def get_daily_news(items_per_source=2):
     """
     彙整越南相關中英文新聞，供 AI 腳本生成使用。
-    目標聽眾：在越南生活的華人、台商、新南向相關商務人士。
+    目標聽眾：在越南生活的台商、華人與中文商務人士。
+    新聞來源策略：優先越南本地英文媒體，輔以越南視角的Google News搜尋。
+    刻意排除「台灣媒體報導越南」的外部視角，確保在地感。
     """
     sources = {
-        # ── 越南英文主流媒體 ──────────────────────────────────────────
-        'VnExpress International': 'https://e.vnexpress.net/rss/news/business.rss',
+        # ── 越南本地英文主流媒體 (直接 RSS) ─────────────────────────
+        'VnExpress International – Business': 'https://e.vnexpress.net/rss/news/business.rss',
+        'Tuoi Tre News':      'https://tuoitrenews.vn/rss/business.rss',
+        'Nhan Dan Online':    'https://en.nhandan.vn/rss/business.rss',
+
+        # ── 越南文本地媒體 (直接 RSS，AI 可直接閱讀越南文) ──────────
+        'VnExpress – Kinh Doanh (越文商業)': 'https://vnexpress.net/rss/kinh-doanh.rss',
+        'Tuoi Tre – Kinh Tế (越文財經)': 'https://tuoitre.vn/rss/kinh-te.rss',
+        'Thanh Nien – Kinh Tế (越文財經)': 'https://thanhnien.vn/rss/kinh-te.rss',
+        'Báo Đầu Tư – FDI & Đầu Tư (越文投資報)': 'https://baodautu.vn/rss/dau-tu.rss',
+        'Nhịp Cầu Đầu Tư (越文商業週刊)': 'https://nhipcaudautu.vn/rss/',
+
+        # ── 越南英文商業財經專業媒體 (Google News 搜尋) ──────────────
         'Vietnam Investment Review (VIR)': (
             'https://news.google.com/rss/search?q=site:vir.com.vn+when:2d'
             '&hl=en-VN&gl=VN&ceid=VN:en'
         ),
-        'Vietnam Briefing (Economy)': (
+        'Vietnam Briefing': (
             'https://news.google.com/rss/search?q=site:vietnam-briefing.com+when:2d'
-            '&hl=en&gl=US&ceid=US:en'
+            '&hl=en-VN&gl=VN&ceid=VN:en'
+        ),
+        'Vietcetera': (
+            'https://news.google.com/rss/search?q=site:vietcetera.com+when:2d'
+            '&hl=en-VN&gl=VN&ceid=VN:en'
         ),
 
-        # ── Google News 越南中文搜尋 ──────────────────────────────────
-        'Google新聞 – 越南台商': (
-            'https://news.google.com/rss/search?q=越南+台商+OR+投資+OR+工廠+when:2d'
-            '&hl=zh-TW&gl=TW&ceid=TW:zh-Hant'
+        # ── 越南本地視角的 Google News 搜尋（聚焦在地新聞）─────────
+        'Google News – Vietnam FDI & Manufacturing': (
+            'https://news.google.com/rss/search?q=Vietnam+FDI+factory+manufacturing+OR+%22industrial+zone%22+when:2d'
+            '&hl=en-VN&gl=VN&ceid=VN:en'
         ),
-        'Google新聞 – 越南華人': (
-            'https://news.google.com/rss/search?q=越南+華人+OR+胡志明市+OR+台灣人+when:2d'
-            '&hl=zh-TW&gl=TW&ceid=TW:zh-Hant'
-        ),
-        'Google新聞 – 越南新南向': (
-            'https://news.google.com/rss/search?q=越南+新南向+OR+勞工+OR+移工+when:2d'
-            '&hl=zh-TW&gl=TW&ceid=TW:zh-Hant'
-        ),
-
-        # ── Google News 英文越南財經 ──────────────────────────────────
         'Google News – Vietnam Economy': (
-            'https://news.google.com/rss/search?q=Vietnam+economy+GDP+inflation+when:2d'
+            'https://news.google.com/rss/search?q=Vietnam+economy+GDP+inflation+%22State+Bank%22+when:2d'
             '&hl=en-VN&gl=VN&ceid=VN:en'
         ),
-        'Google News – Hanoi City': (
-            'https://news.google.com/rss/search?q="Hanoi"+business+real+estate+when:2d'
-            '&hl=en-VN&gl=VN&ceid=VN:en'
-        ),
-        'Google News – Ho Chi Minh City': (
+        'Google News – HCMC Business': (
             'https://news.google.com/rss/search?q=%22Ho+Chi+Minh+City%22+business+real+estate+when:2d'
             '&hl=en-VN&gl=VN&ceid=VN:en'
-        ),
-        'Google News – Vietnam Manufacturing FDI': (
-            'https://news.google.com/rss/search?q=Vietnam+manufacturing+FDI+factory+supply+chain+when:2d'
-            '&hl=en&gl=US&ceid=US:en'
-        ),
-        'Google News – Vietnam Tech': (
-            'https://news.google.com/rss/search?q=Vietnam+semiconductor+technology+startup+when:2d'
-            '&hl=en&gl=US&ceid=US:en'
-        ),
-
-        # ── 台灣財經媒體越南相關報導 ──────────────────────────────────
-        '鉅亨網 – 越南': (
-            'https://news.google.com/rss/search?q=site:cnyes.com+越南+when:2d'
-            '&hl=zh-TW&gl=TW&ceid=TW:zh-Hant'
-        ),
-        'ETtoday – 越南': (
-            'https://news.google.com/rss/search?q=site:ettoday.net+越南+when:2d'
-            '&hl=zh-TW&gl=TW&ceid=TW:zh-Hant'
         ),
     }
 
