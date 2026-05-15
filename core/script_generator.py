@@ -204,13 +204,16 @@ def generate_podcast_script(news_data, social_data, weather_data=None, exchange_
     - If weather data is unavailable, say so and advise listeners to check locally.
 
     ### MANDATORY SECTION — SMART CURRENCY CORNER ###
-    You MUST include a dedicated "財經匯率角" (Currency Corner) segment in EVERY single broadcast.
+    You MUST include a dedicated "財經匯率報導" (Currency Report) segment in EVERY single broadcast.
     - Report the exact USD/VND, CNY/VND, and TWD/VND exchange rates provided in the source materials.
     - If the rates are not provided, simply mention that the data is unavailable today. DO NOT invent numbers.
-    - SMART LOGIC: Check the source materials. If "高波動: 是" is present, you MUST provide a
-      deeper analysis of the recent swing, explaining what it means for expats' purchasing power,
-      business costs, and cross-border trade. If "高波動: 否", keep it VERY brief.
-      Just state the rates and say "今日越南盾匯率相對平穩." DO NOT give a long analysis if stable.
+    - SMART LOGIC (STRICTLY ENFORCED):
+      * If "高波動: 是": Provide a focused 3-4 sentence analysis ONLY about the direct practical impact
+        (e.g. how it affects payroll, procurement costs, or cross-border remittances). Do NOT write generic
+        macroeconomic textbook explanations about FDI, Fed policy, trade surplus, or hedging instruments.
+        Keep total currency segment under 150 words.
+      * If "高波動: 否": Report the three rates in ONE sentence, then say "今日越南盾匯率相對平穩。"
+        MAXIMUM 2 sentences total. ABSOLUTELY NO further analysis, explanation, or commentary.
 
     ### EDITORIAL GUIDELINES ###
     1. PRIORITIZATION: The news items are pre-sorted by an importance score. Maintain this order.
@@ -223,6 +226,11 @@ def generate_podcast_script(news_data, social_data, weather_data=None, exchange_
     8. CALL TO ACTION (CTA): MANDATORY. After the social media segment, you MUST say: "以上就是今天的越南晨間快訊 Good Morning Vietnam。如果你覺得這集節目對你有幫助，請記得訂閱我們的頻道，並分享給你在越南打拼的同事和朋友。也歡迎你在收聽平台給我們留下五星好評，這對我們是莫大的鼓勵。我是語昕，我們明天見，Tạm biệt！" This closing MUST be the very last thing in the script. The script is NOT complete without it.
     9. TONE: Professional but conversational, like a friendly business briefing. Pace should be engaging.
     10. LENGTH: The full script MUST be between 1800 and 2400 words. ALWAYS finish the full closing before hitting the word limit — never truncate the CTA or sign-off.
+    11. NEWS SOURCE FILTER (CRITICAL): ONLY report stories that originate from Vietnam-local media or events
+        happening INSIDE Vietnam. SKIP any story that is primarily about Taiwan-based events, conferences,
+        or government activities that merely mention Vietnam (e.g. a seminar held in Taichung about Vietnam,
+        a Taiwan government policy announcement about Vietnam). The audience is ALREADY IN Vietnam — they need
+        local on-the-ground news, NOT news from Taiwan about Vietnam.
 
     ### STRICT PROHIBITIONS ###
     - DO NOT hallucinate or invent any news stories, quotes, or events.
