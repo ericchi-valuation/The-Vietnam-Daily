@@ -1,0 +1,6 @@
+# 在這裡輸入您的業配文內容（英文）
+# 例如：
+# "Taiwan Gold Card Community, the best resource for foreign professionals in Taiwan. Visit goldcard.tw today!"
+#
+# 目前此檔案為空，所以廣播不會提到業配。
+# 當您有業配時，只需修改此檔案並 Push 到 GitHub，Eric 就會在開場時自動播報。

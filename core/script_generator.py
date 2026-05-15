@@ -1,0 +1,424 @@
+import os
+import json
+import time
+import datetime
+import re
+import pytz
+from google import genai
+from google.genai import types
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def score_and_sort_articles(client, news_data):
+    """
+    使用 Gemini 模型為新聞評分 (1-10)，依對在越華人/台商的重要性排序。
+    """
+    all_articles = []
+    for source, articles in news_data.items():
+        for a in articles:
+            a['source_name'] = source
+            all_articles.append(a)
+    
+    if not all_articles:
+        return []
+
+    articles_list_text = ""
+    for i, a in enumerate(all_articles):
+        articles_list_text += f"ID: {i} | Title: {a['title']}\nSummary: {a['summary']}\n\n"
+
+    scoring_prompt = f"""
+    You are an expert news editor for a daily Chinese-language podcast targeting Taiwanese businesspeople (台商) and Chinese-speaking professionals living in Vietnam.
+    Score the following news articles from 1 to 10 based on their importance for this target audience.
+    
+    SCORING CRITERIA:
+    - 9-10: VND exchange rate moves, State Bank of Vietnam (SBV) policies, major FDI announcements, significant supply chain shifts, labor law or visa changes for foreigners.
+    - 7-8: Macroeconomic updates (GDP, inflation), major infrastructure projects, significant industry news (manufacturing, tech).
+    - 5-6: Local business news, real estate trends in major cities (Hanoi, HCMC), cross-border trade updates.
+    - 1-4: Minor local events, lifestyle, general interest.
+    
+    IMPORTANT: If multiple articles discuss the same topic or event, give them a "Frequency Bonus" (+1 or +2).
+    VND exchange rate and FDI manufacturing news ALWAYS score highly.
+    
+    OUTPUT FORMAT:
+    You MUST output ONLY a raw JSON array. DO NOT wrap it in ```json blocks. DO NOT add any conversational text.
+    Example:
+    [
+      {{"id": 0, "score": 8}},
+      {{"id": 1, "score": 5}}
+    ]
+    
+    ARTICLES:
+    {articles_list_text}
+    """
+
+    scoring_schema = {
+        "type": "ARRAY",
+        "items": {
+            "type": "OBJECT",
+            "properties": {
+                "id": {"type": "INTEGER"},
+                "score": {"type": "INTEGER"}
+            },
+            "required": ["id", "score"]
+        }
+    }
+
+    models_to_try = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro']
+    response = None
+    
+    for model_name in models_to_try:
+        try:
+            print(f"正在使用 {model_name} 為 {len(all_articles)} 則新聞進行重要性評分...")
+            response = client.models.generate_content(
+                model=model_name,
+                contents=scoring_prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type='application/json',
+                    response_schema=scoring_schema
+                )
+            )
+            if response:
+                print(f"  ✔️ 評分完成 (使用 {model_name})")
+                break
+        except Exception as e:
+            error_msg = str(e)
+            print(f"⚠️ {model_name} 評分失敗: {error_msg}")
+            if "503" in error_msg or "UNAVAILABLE" in error_msg:
+                time.sleep(15)
+            continue
+
+    if not response:
+        print("❌ 所有模型皆無法進行評分，將使用預設排序。")
+        for a in all_articles:
+            a['score'] = 1
+        return all_articles[:10]
+
+    try:
+        if response.parsed:
+            scores = response.parsed
+        else:
+            clean_text = response.text.replace("```json", "").replace("```", "").strip()
+            json_match = re.search(r'\[.*\]', clean_text, re.DOTALL)
+            if json_match:
+                clean_text = json_match.group(0)
+            scores = json.loads(clean_text)
+        
+        score_map = {item['id']: item['score'] for item in scores}
+        for i, a in enumerate(all_articles):
+            a['score'] = score_map.get(i, 1) 
+            
+    except Exception as e:
+        print(f"⚠️ 評分結果解析失敗: {e}")
+        for a in all_articles:
+            if 'score' not in a:
+                a['score'] = 1
+
+    sorted_articles = sorted(all_articles, key=lambda x: x.get('score', 0), reverse=True)
+    return sorted_articles[:10]
+
+
+def generate_podcast_script(news_data, social_data, weather_data=None, exchange_data=None, events_data=None, sponsor_text=None):
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key or api_key == "your_gemini_api_key_here":
+        print("\n❌ 錯誤: 找不到有效的 GEMINI_API_KEY。")
+        return None
+
+    client = genai.Client(api_key=api_key)
+
+    if not news_data and not social_data:
+        print("⚠️ 警告：沒有收集到任何新聞或社群資料，跳過 AI 生成。")
+        return None
+
+    top_articles = score_and_sort_articles(client, news_data)
+    
+    sources_text = "【今日重點越南新聞】\n"
+    if not top_articles:
+        sources_text += "今日無重大新聞。\n"
+    else:
+        for a in top_articles:
+            sources_text += f"\n[Score: {a.get('score', 0)}/10] 來源: {a.get('source_name')} | 標題: {a.get('title')}\n摘要: {a.get('summary')}\n"
+            
+    sources_text += "\n\n[🌤️ 今日越南雙城天氣 (河內與胡志明市)]\n"
+    if weather_data and 'hanoi' in weather_data:
+        for city_key in ['hanoi', 'hcmc']:
+            city_weather = weather_data.get(city_key, {})
+            if city_weather.get('condition') != '資料無法取得':
+                sources_text += (
+                    f"【{city_weather.get('city', city_key)}】 "
+                    f"狀況: {city_weather.get('condition')}, "
+                    f"最高溫: {city_weather.get('temp_max_c')}°C, "
+                    f"最低溫: {city_weather.get('temp_min_c')}°C, "
+                    f"降雨: {city_weather.get('precip_mm')} mm\n"
+                )
+    else:
+        sources_text += "今日天氣資料無法取得。\n"
+
+    if exchange_data and exchange_data.get('usd_vnd'):
+        sources_text += "\n\n[💱 今日匯率動態]\n"
+        sources_text += f"高波動: {'是' if exchange_data.get('high_volatility') else '否'}\n"
+        sources_text += exchange_data.get('summary', '') + "\n"
+
+    sources_text += "\n\n[💬 越南台商與華人社群熱議]\n"
+    for post in social_data:
+        title = post.get('title', '未知主題')
+        topics = post.get('topics', [])
+        topics_str = ', '.join(topics) if topics else '綜合討論'
+        sources_text += f"話題: {title} (來源: {topics_str})\n"
+
+    if events_data:
+        sources_text += "\n\n[🎭 今日雙城活動 (河內 & 胡志明市)]\n"
+        for ev in events_data:
+            sources_text += f"活動: {ev.get('title')} (來源: {ev.get('source')})\n摘要: {ev.get('summary')}\n"
+
+    tz_str = os.environ.get("TZ", "Asia/Ho_Chi_Minh")
+    tz = pytz.timezone(tz_str)
+    today_str = datetime.datetime.now(tz).strftime("%Y年%m月%d日")
+
+    sponsor_instruction = ""
+    if sponsor_text and sponsor_text.strip():
+        sponsor_instruction = f"本集節目由以下贊助商提供支持：{sponsor_text.strip()}。"
+    else:
+        sponsor_instruction = "本集目前無贊助商。請勿提及贊助資訊。"
+
+    system_prompt = f"""
+    You are 語昕, an energetic, professional yet engaging podcast host for a daily Chinese-language news show called "越南晨間快訊 Good Morning Vietnam".
+    Your strict target audience is Taiwanese businesspeople (台商), expats, and Chinese-speaking professionals living/working in Vietnam.
+    
+    Please write the script entirely in TRADITIONAL CHINESE (繁體中文).
+
+    IMPORTANT: You MUST start the broadcast by welcoming the listener, introducing yourself as 語昕,
+    explicitly reading today's date ({today_str}), and integrating the sponsor message if provided.
+
+    ### SPONSOR MESSAGE ###
+    {sponsor_instruction}
+    - If a sponsor is provided, mention it naturally early in the show.
+    - If NO sponsor is provided, skip the sponsor mention entirely.
+
+    ### MANDATORY SECTION — WEATHER BRIEFING ###
+    Immediately after the opening, include a short "越南雙城天氣預報" (Vietnam Cities Weather Briefing) segment.
+    - Briefly report the conditions and temperatures for BOTH Hanoi and Ho Chi Minh City based on the provided data.
+    - Mention significant differences between the North (Hanoi) and South (HCMC) if applicable.
+    - Give ONE brief, practical lifestyle tip ONLY (e.g., "記得帶把傘" or "北部溫差較大注意保暖"). Do NOT suggest specific locations or leisure activities. One sentence maximum.
+    - This segment should be very concise.
+    - If weather data is unavailable, say so and advise listeners to check locally.
+
+    ### MANDATORY SECTION — SMART CURRENCY CORNER ###
+    You MUST include a dedicated "財經匯率角" (Currency Corner) segment in EVERY single broadcast.
+    - Report the exact USD/VND, CNY/VND, and TWD/VND exchange rates provided in the source materials.
+    - If the rates are not provided, simply mention that the data is unavailable today. DO NOT invent numbers.
+    - SMART LOGIC: Check the source materials. If "高波動: 是" is present, you MUST provide a
+      deeper analysis of the recent swing, explaining what it means for expats' purchasing power,
+      business costs, and cross-border trade. If "高波動: 否", keep it VERY brief.
+      Just state the rates and say "今日越南盾匯率相對平穩." DO NOT give a long analysis if stable.
+
+    ### EDITORIAL GUIDELINES ###
+    1. PRIORITIZATION: The news items are pre-sorted by an importance score. Maintain this order.
+    2. DEPTH BY IMPORTANCE: Devote significantly more time to higher-scoring stories.
+    3. EXPAT FOCUS: Focus heavily on business, FDI, manufacturing supply chains, real estate, and policies affecting foreigners in Vietnam.
+    4. FACT-CHECKING: Do NOT say "tomorrow's announcement" if the event has already passed based on article dates.
+    5. EVENTS: After the news, feature 1-2 interesting events from Hanoi OR HCMC from the provided sources to add "lifestyle flavor".
+    6. FILTER TRASH: Ignore tabloid gossip.
+    7. SOCIAL MEDIA: End the news section with 1-2 fun trending topics from the provided social data. Filter out NSFW content strictly.
+    8. CALL TO ACTION (CTA): MANDATORY. After the social media segment, you MUST say: "以上就是今天的越南晨間快訊 Good Morning Vietnam。如果你覺得這集節目對你有幫助，請記得訂閱我們的頻道，並分享給你在越南打拼的同事和朋友。也歡迎你在收聽平台給我們留下五星好評，這對我們是莫大的鼓勵。我是語昕，我們明天見，Tạm biệt！" This closing MUST be the very last thing in the script. The script is NOT complete without it.
+    9. TONE: Professional but conversational, like a friendly business briefing. Pace should be engaging.
+    10. LENGTH: The full script MUST be between 1800 and 2400 words. ALWAYS finish the full closing before hitting the word limit — never truncate the CTA or sign-off.
+
+    ### STRICT PROHIBITIONS ###
+    - DO NOT hallucinate or invent any news stories, quotes, or events.
+    - DO NOT mention any editorial score or rating in the spoken script (e.g. "評分為9分", "這是一則8分的新聞"). Scores are internal editorial tools only.
+    - DO NOT use any Markdown formatting in the script (no #, **, *, ---).
+    - DO NOT state the wrong date. Today is {today_str}.
+    - DO NOT list or enumerate the target audience by name in the script. Phrases like "各位在越南打拼的台商、華人與商務人士" or similar enumeration of listener types are BANNED. Speak directly to the listener as "你" or "各位聽眾" instead.
+
+    ### SCRIPT FORMAT ###
+    Output ONLY a JSON object.
+    Format:
+    {{
+      "script": "The full spoken broadcast script in Traditional Chinese ending with the mandatory CTA and Tạm biệt sign-off...",
+      "summary": "A 3-5 sentence episode description for podcast platforms in Traditional Chinese. Start with today's top 2-3 news stories, then list today's events with their names and a one-line description each. End with one sentence inviting listeners to tune in."
+    }}
+    """
+    
+    podcast_schema = {
+        "type": "OBJECT",
+        "properties": {
+            "script": {"type": "STRING"},
+            "summary": {"type": "STRING"}
+        },
+        "required": ["script", "summary"]
+    }
+
+    print("\n[AI 運作中] 正在編寫講稿與摘要 (約需 20~40 秒)...")
+    
+    config = types.GenerateContentConfig(
+        system_instruction=system_prompt,
+        temperature=0.6,
+        response_mime_type='application/json',
+        response_schema=podcast_schema
+    )
+    
+    prompt_content = f"這是今天的素材。請撰寫詳細、豐富的廣播稿與摘要：\n\n{sources_text}"
+    
+    models_to_try = [
+        'gemini-2.5-flash', 
+        'gemini-2.5-pro',
+        'gemini-2.0-flash'
+    ]
+    response = None
+    
+    for model_name in models_to_try:
+        max_retries = 3
+        base_wait = 20
+        
+        for attempt in range(max_retries):
+            try:
+                print(f"嘗試載入 {model_name} 模型 (attempt {attempt + 1}/{max_retries})...")
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt_content,
+                    config=config
+                )
+                print(f"✔️ 成功使用 {model_name} 模型生成內容！")
+                break 
+                
+            except Exception as e:
+                error_msg = str(e)
+                print(f"⚠️ {model_name} 失敗: {error_msg}")
+                
+                if "503" in error_msg or "UNAVAILABLE" in error_msg:
+                    wait_sec = base_wait * (2 ** attempt)
+                    print(f"  ⏳ API 暫時過載 (503)。等待 {wait_sec} 秒後重試...")
+                    time.sleep(wait_sec)
+                elif "429" in error_msg or "Quota exceeded" in error_msg:
+                    print(f"⏳ 偵測到 API 額度耗盡 (429)，暫停 60 秒後重試...")
+                    time.sleep(60)
+                else:
+                    break
+                    
+        if response:
+            break
+            
+    if getattr(response, 'text', None) is None:
+        print("❌ 所有模型皆無回應或 API 額度受限，無法生成內容。")
+        return None
+        
+    try:
+        if getattr(response, 'parsed', None):
+            result_json = response.parsed
+        else:
+            raw_text = response.text.strip()
+            clean_text = raw_text.replace("```json", "").replace("```", "").strip()
+            json_match = re.search(r'\{.*\}', clean_text, re.DOTALL)
+            if json_match:
+                clean_text = json_match.group(0)
+            result_json = json.loads(clean_text)
+        
+        script = result_json.get('script', '')
+        summary = result_json.get('summary', "今日最新的越南商業與科技動態。")
+        
+        with open("script.txt", "w", encoding="utf-8") as f:
+            f.write(script)
+            
+        with open("summary.txt", "w", encoding="utf-8") as f:
+            f.write(summary)
+            
+        print("✅ 講稿與摘要生成完畢！已儲存至 script.txt 與 summary.txt")
+        return script
+        
+    except Exception as e:
+        print(f"❌ JSON 解析失敗: {e}")
+        return None
+
+def review_and_improve_script(script: str, client=None) -> str:
+    """
+    AI 編輯審稿：在 TTS 之前檢查稿件品質。
+    """
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not client:
+        if not api_key:
+            print("⚠️ [AI Editor] 無 GEMINI_API_KEY，跳過 AI 審稿，僅做格式清理。")
+            return _clean_script_formatting(script)
+        client = genai.Client(api_key=api_key)
+
+    word_count = len(script.split())
+    print(f"\n📝 [AI Editor] 審稿中... 目前中文字數預估: {word_count} 字 (以空格切割估算)")
+
+    script = _clean_script_formatting(script)
+
+    needs_expansion = word_count < 1500
+    needs_trim = word_count > 2500
+
+    if not needs_expansion and not needs_trim:
+        print(f"  ✔️ [AI Editor] 字數 ({word_count}) 在合理範圍內，稿件通過審閱。")
+        return script
+
+    if needs_expansion:
+        action = "EXPAND"
+        instruction = (
+            f"目前稿件偏短 (約 {word_count} 字)。請將其擴充至約 1800 字。為主要新聞加入更深入的分析、"
+            "在越台商的背景脈絡與歷史淵源。請勿加入無意義的廢話，也不要無中生有捏造新聞。"
+        )
+    else:
+        action = "TRIM"
+        instruction = (
+            f"目前稿件稍長 (約 {word_count} 字)。請將其精簡至 2300 字以內。刪除冗言贅字，但必須保留所有主要新聞與活動。"
+        )
+
+    print(f"  🤖 [AI Editor] 正在 {action} 稿件...")
+
+    editor_prompt = f"""
+    You are a senior podcast editor for a Chinese-language daily news podcast in Vietnam.
+
+    {instruction}
+
+    STRICT RULES:
+    1. Output ONLY the revised script text in Traditional Chinese (繁體中文). No JSON, no markdown, no explanation.
+    2. Do NOT add any Markdown formatting (no #, ##, **, *, ---).
+    3. Do NOT add vocabulary lessons or "word of the day" segments.
+    4. Do NOT invent new facts, numbers, or events.
+    5. Maintain the same host voice and professional tone.
+    6. CRITICAL: The script MUST end with the full closing CTA and "Tạm biệt!" sign-off. If the original script is missing this or it is cut off, you MUST restore it: add "以上就是今天的越南晨間快訊 Good Morning Vietnam。如果你覺得這集節目對你有幫助，請記得訂閱我們的頻道，並分享給你在越南打拼的同事和朋友。也歡迎你在收聽平台給我們留下五星好評，這對我們是莫大的鼓勵。我是語昕，我們明天見，Tạm biệt！"
+    7. When trimming, NEVER cut the closing CTA or sign-off — trim from the middle of news stories instead.
+    8. DO NOT list or enumerate the target audience by name anywhere in the script. Remove any phrases like "各位在越南打拼的台商、華人與商務人士" — replace them with direct address to the listener ("你" or "各位聽眾").
+    9. For weather tips: keep only ONE brief practical tip. Remove any suggestions of specific venues or leisure activities.
+
+    HERE IS THE CURRENT SCRIPT:
+    ---
+    {script}
+    ---
+    """
+
+    editor_models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro']
+    for model_name in editor_models:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=editor_prompt,
+                config=types.GenerateContentConfig(temperature=0.4)
+            )
+            revised = _clean_script_formatting(response.text.strip())
+            new_word_count = len(revised.split())
+            print(f"  ✔️ [AI Editor] 審稿完成 (使用 {model_name})，修訂後字數: {new_word_count} 字")
+            return revised
+        except Exception as e:
+            print(f"  ⚠️ [AI Editor] {model_name} 失敗: {e}")
+            time.sleep(15)
+
+    print("  ⚠️ [AI Editor] 所有模型均失敗，回傳格式清理後的原稿。")
+    return script
+
+
+def _clean_script_formatting(script: str) -> str:
+    script = re.sub(r'^#{1,6}\s+', '', script, flags=re.MULTILINE)
+    script = re.sub(r'\*{1,2}([^*]+)\*{1,2}', r'\1', script)
+    script = re.sub(r'^[\-\*_]{3,}\s*$', '', script, flags=re.MULTILINE)
+    script = re.sub(
+        r'(?i)(,?\s*)'
+        r'((?:both|also|each)?\s*(?:scoring|rated?|with\s+a\s+score\s+of|a\s+perfect)'
+        r'\s+[a-z\s]*?\d{1,2}(?:\s*out\s*of\s*10|/10))',
+        '',
+        script
+    )
+    script = re.sub(r'\n{3,}', '\n\n', script)
+    return script.strip()
