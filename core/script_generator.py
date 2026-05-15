@@ -234,10 +234,11 @@ def generate_podcast_script(news_data, social_data, weather_data=None, exchange_
 
     ### STRICT PROHIBITIONS ###
     - DO NOT hallucinate or invent any news stories, quotes, or events.
-    - DO NOT mention any editorial score or rating in the spoken script (e.g. "評分為9分", "這是一則8分的新聞"). Scores are internal editorial tools only.
-    - DO NOT use any Markdown formatting in the script (no #, **, *, ---).
+    - DO NOT mention any editorial score or rating in the spoken script.
+    - DO NOT use any Markdown formatting.
     - DO NOT state the wrong date. Today is {today_str}.
-    - DO NOT list or enumerate the target audience by name in the script. Phrases like "各位在越南打拼的台商、華人與商務人士" or similar enumeration of listener types are BANNED. Speak directly to the listener as "你" or "各位聽眾" instead.
+    - DO NOT list or enumerate the target audience by name.
+    - NATURAL PHRASING: When writing English phrases like "Good Morning Vietnam", ALWAYS surround them with a comma or dash (e.g. "越南晨間快訊，Good Morning Vietnam") to ensure the TTS engine pauses and switches languages naturally. Do NOT run them together with Chinese characters.
 
     ### SCRIPT FORMAT ###
     Output ONLY a JSON object.

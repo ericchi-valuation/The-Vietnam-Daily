@@ -20,7 +20,12 @@ def generate_audio_elevenlabs(script_text, output_file):
     data = {
         "text": script_text,
         "model_id": "eleven_multilingual_v2",
-        "voice_settings": {"stability": 0.5, "similarity_boost": 0.5}
+        "voice_settings": {
+            "stability": 0.45,         # 稍微降低穩定度，增加語氣起伏
+            "similarity_boost": 0.7,   # 提高相似度，確保聲音特徵鮮明
+            "style": 0.06,             # 增加一點風格表現
+            "use_speaker_boost": True
+        }
     }
     
     response = requests.post(url, json=data, headers=headers)
