@@ -125,7 +125,7 @@ def get_daily_news(items_per_source=2):
             '&hl=en-VN&gl=VN&ceid=VN:en'
         ),
         'Google News – Ho Chi Minh City': (
-            'https://news.google.com/rss/search?q="Ho Chi Minh City"+business+real+estate+when:2d'
+            'https://news.google.com/rss/search?q=%22Ho+Chi+Minh+City%22+business+real+estate+when:2d'
             '&hl=en-VN&gl=VN&ceid=VN:en'
         ),
         'Google News – Vietnam Manufacturing FDI': (
