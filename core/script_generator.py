@@ -341,7 +341,7 @@ def review_and_improve_script(script: str, client=None) -> str:
             return _clean_script_formatting(script)
         client = genai.Client(api_key=api_key)
 
-    word_count = len(script.split())
+    word_count = len(re.findall(r'\S', script))
     print(f"\n📝 [AI Editor] 審稿中... 目前中文字數預估: {word_count} 字 (以空格切割估算)")
 
     script = _clean_script_formatting(script)
@@ -398,7 +398,7 @@ def review_and_improve_script(script: str, client=None) -> str:
                 config=types.GenerateContentConfig(temperature=0.4)
             )
             revised = _clean_script_formatting(response.text.strip())
-            new_word_count = len(revised.split())
+            new_word_count = len(re.findall(r'\S', revised))
             print(f"  ✔️ [AI Editor] 審稿完成 (使用 {model_name})，修訂後字數: {new_word_count} 字")
             return revised
         except Exception as e:
