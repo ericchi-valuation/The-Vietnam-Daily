@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+  <channel>
+    <title>越南晨間快訊 Good Morning Vietnam</title>
+    <link>https://github.com/ericchi-valuation</link>
+    <description>專為在越南生活的台商、華人與中文商務人士打造的每日重點新聞播報。AI 全自動產製，為您掌握越南產經、外資動態與在地生活情報。</description>
+    <itunes:explicit>no</itunes:explicit>
+    <docs>http://www.rssboard.org/rss-specification</docs>
+    <generator>python-podgen v1.1.0 https://podgen.readthedocs.org</generator>
+    <language>zh-TW</language>
+    <lastBuildDate>Fri, 15 May 2026 22:42:20 +0000</lastBuildDate>
+    <itunes:author>Eric Chi</itunes:author>
+    <managingEditor>eric.chi1988@gmail.com (Eric Chi)</managingEditor>
+    <pubDate>Sat, 16 May 2026 05:42:15 +0700</pubDate>
+    <itunes:category text="News">
+      <itunes:category text="Business News"/>
+    </itunes:category>
+    <itunes:image href="https://raw.githubusercontent.com/ericchi-valuation/Vietnam-Daily-Insider/main/cover.jpg"/>
+    <itunes:owner>
+      <itunes:name>Eric Chi</itunes:name>
+      <itunes:email>eric.chi1988@gmail.com</itunes:email>
+    </itunes:owner>
+    <item>
+      <title>越南晨間快訊 Good Morning Vietnam - 2026-05-16</title>
+      <description><![CDATA[今天的《越南晨間快訊》為您帶來一系列重要資訊。首先，前駐越南代表石瑞琦大使在「與大使有約」講座中，深入剖析了越南新局勢與台商搶進新契機。同時，越南今年前四個月的外國直接投資（FDI）同比增長超過35%，且下一代FDI將更注重技術轉移，顯示越南經濟轉型升級的決心。世界銀行預測2026年越南經濟增長將放緩至6.8%，但仍屬強勁。在活動方面，胡志明市與歐盟在永續發展合作上展現廣闊空間，而韓國機器人與AI企業也對越南市場高度感興趣。歡迎收聽本集節目，掌握更多越南商業與生活脈動！]]></description>
+      <guid isPermaLink="false">https://github.com/ericchi-valuation/Good_Morning_Vietnam_2026/releases/download/ep-2026-05-16/VietnamDaily_Podcast_Final.mp3</guid>
+      <enclosure url="https://github.com/ericchi-valuation/Good_Morning_Vietnam_2026/releases/download/ep-2026-05-16/VietnamDaily_Podcast_Final.mp3" length="31301842" type="audio/mpeg"/>
+      <itunes:duration>21:44</itunes:duration>
+      <pubDate>Sat, 16 May 2026 05:42:15 +0700</pubDate>
+    </item>
+  </channel>
+</rss>
