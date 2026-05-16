@@ -8,10 +8,10 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-podgen v1.1.0 https://podgen.readthedocs.org</generator>
     <language>zh-TW</language>
-    <lastBuildDate>Fri, 15 May 2026 22:42:20 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 16 May 2026 00:02:44 +0000</lastBuildDate>
     <itunes:author>Eric Chi</itunes:author>
     <managingEditor>eric.chi1988@gmail.com (Eric Chi)</managingEditor>
-    <pubDate>Sat, 16 May 2026 05:42:15 +0700</pubDate>
+    <pubDate>Sat, 16 May 2026 07:02:43 +0700</pubDate>
     <itunes:category text="News">
       <itunes:category text="Business News"/>
     </itunes:category>
@@ -22,11 +22,11 @@
     </itunes:owner>
     <item>
       <title>越南晨間快訊 Good Morning Vietnam - 2026-05-16</title>
-      <description><![CDATA[今天的《越南晨間快訊》為您帶來一系列重要資訊。首先，前駐越南代表石瑞琦大使在「與大使有約」講座中，深入剖析了越南新局勢與台商搶進新契機。同時，越南今年前四個月的外國直接投資（FDI）同比增長超過35%，且下一代FDI將更注重技術轉移，顯示越南經濟轉型升級的決心。世界銀行預測2026年越南經濟增長將放緩至6.8%，但仍屬強勁。在活動方面，胡志明市與歐盟在永續發展合作上展現廣闊空間，而韓國機器人與AI企業也對越南市場高度感興趣。歡迎收聽本集節目，掌握更多越南商業與生活脈動！]]></description>
+      <description><![CDATA[本集『越南晨間快訊』聚焦越南經濟的強勁動能，首先深入分析越南如何以數十億美元資本全力投入科技產業，以及台灣光寶科技加碼1.49億美元在越南擴大投資的具體案例。節目也報導了今年前四個月外國直接投資（FDI）同比增長超過35%的亮眼成績，顯示國際資本對越南經濟的強烈信心。此外，我們探討了外資企業在越南進行內部調查的實用指南，並分析了越南政府為實現平衡長期增長所做的努力。今日活動方面，胡志明市與歐盟正在探討可持續發展合作的廣闊空間。歡迎收聽本集節目，掌握越南最新商機與生活資訊！]]></description>
       <guid isPermaLink="false">https://github.com/ericchi-valuation/Good_Morning_Vietnam_2026/releases/download/ep-2026-05-16/VietnamDaily_Podcast_Final.mp3</guid>
-      <enclosure url="https://github.com/ericchi-valuation/Good_Morning_Vietnam_2026/releases/download/ep-2026-05-16/VietnamDaily_Podcast_Final.mp3" length="31301842" type="audio/mpeg"/>
-      <itunes:duration>21:44</itunes:duration>
-      <pubDate>Sat, 16 May 2026 05:42:15 +0700</pubDate>
+      <enclosure url="https://github.com/ericchi-valuation/Good_Morning_Vietnam_2026/releases/download/ep-2026-05-16/VietnamDaily_Podcast_Final.mp3" length="10947648" type="audio/mpeg"/>
+      <itunes:duration>07:36</itunes:duration>
+      <pubDate>Sat, 16 May 2026 07:02:43 +0700</pubDate>
     </item>
   </channel>
 </rss>
