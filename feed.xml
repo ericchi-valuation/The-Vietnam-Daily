@@ -8,10 +8,10 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-podgen v1.1.0 https://podgen.readthedocs.org</generator>
     <language>zh-TW</language>
-    <lastBuildDate>Sat, 16 May 2026 00:02:44 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 17 May 2026 00:02:40 +0000</lastBuildDate>
     <itunes:author>Eric Chi</itunes:author>
     <managingEditor>eric.chi1988@gmail.com (Eric Chi)</managingEditor>
-    <pubDate>Sat, 16 May 2026 07:02:43 +0700</pubDate>
+    <pubDate>Sun, 17 May 2026 07:02:38 +0700</pubDate>
     <itunes:category text="News">
       <itunes:category text="Business News"/>
     </itunes:category>
@@ -27,6 +27,14 @@
       <enclosure url="https://github.com/ericchi-valuation/Good_Morning_Vietnam_2026/releases/download/ep-2026-05-16/VietnamDaily_Podcast_Final.mp3" length="10947648" type="audio/mpeg"/>
       <itunes:duration>07:36</itunes:duration>
       <pubDate>Sat, 16 May 2026 07:02:43 +0700</pubDate>
+    </item>
+    <item>
+      <title>越南晨間快訊 Good Morning Vietnam - 2026-05-17</title>
+      <description><![CDATA[今天『越南晨間快訊』聚焦越南政府對企業綠色轉型的支持，以及國會設定各地區2026-2030年GRDP增長目標，預示強勁經濟動能。此外，胡志明市查獲8噸未檢疫肉品，夏季旅遊熱潮即將來臨，而河內市中心延遲禁行燃油摩托車。本週活動包括胡志明市的『友誼樹活動』推動綠色成長與國際團結，以及『我愛我的祖國』旅程，提供多元文化體驗。歡迎收聽本集，掌握越南最新動態。]]></description>
+      <guid isPermaLink="false">https://github.com/ericchi-valuation/Good_Morning_Vietnam_2026/releases/download/ep-2026-05-17/VietnamDaily_Podcast_Final.mp3</guid>
+      <enclosure url="https://github.com/ericchi-valuation/Good_Morning_Vietnam_2026/releases/download/ep-2026-05-17/VietnamDaily_Podcast_Final.mp3" length="9363373" type="audio/mpeg"/>
+      <itunes:duration>06:30</itunes:duration>
+      <pubDate>Sun, 17 May 2026 07:02:38 +0700</pubDate>
     </item>
   </channel>
 </rss>
